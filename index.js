@@ -1,61 +1,52 @@
-const fs = require('fs')
-const http = require('http')
-const url = require('url')
-const replaceTemplate = require('./modules/replaceTemplate')
+const fs = require('fs');
+const http = require('http');
+const url = require('url');
 
-const data = fs.readFileSync(`${__dirname}/dev-data/data.json`)
-const dataObj = JSON.parse(data)
+const slugify = require('slugify');
+const replaceTemplate = require('./modules/replaceTemplate');
 
-const tempOverview = fs.readFileSync(
-    `${__dirname}/templates/template-overview.html`,
-    'utf-8'
-)
-const tempProduct = fs.readFileSync(
-    `${__dirname}/templates/template-product.html`,
-    'utf-8'
-)
-const tempCard = fs.readFileSync(
-    `${__dirname}/templates/template-card.html`,
-    'utf-8'
-)
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`);
+const dataObj = JSON.parse(data);
+
+const fruitArrLowerCase = dataObj.map((obj) => slugify(obj.productName, { lower: true }));
+console.log(fruitArrLowerCase);
+
+const tempOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8');
+const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
+const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8');
 
 const server = http.createServer((req, res) => {
-    const { query, pathname } = url.parse(req.url, true)
+    const { query, pathname } = url.parse(req.url, true);
 
     if (pathname === '/' || pathname === '/overview') {
-        const cards = dataObj.map((product) =>
-            replaceTemplate(tempCard, product)
-        )
-        const output = tempOverview.replace(/{%PRODUCTS_CARDS%}/g, cards)
+        const cards = dataObj.map((product) => replaceTemplate(tempCard, product));
+        const output = tempOverview.replace(/{%PRODUCTS_CARDS%}/g, cards);
 
         res.writeHead(200, {
             'Content-type': 'text/html',
-        })
-        res.end(output)
+        });
+        res.end(output);
     } else if (pathname === '/product') {
-        const productIndex = dataObj.findIndex((el) => el.id === +query.id)
-        const output = replaceTemplate(tempProduct, dataObj[productIndex])
+        const productIndex = dataObj.findIndex((el) => el.id === +query.id);
+        const output = replaceTemplate(tempProduct, dataObj[productIndex]);
 
         res.writeHead(200, {
             'Content-type': 'text/html',
-        })
+        });
 
-        res.end(output)
+        res.end(output);
     } else if (pathname === '/api') {
         res.writeHead(200, {
             'Content-type': 'application-json',
-        })
-        res.end(data)
+        });
+        res.end(data);
     } else {
         res.writeHead(404, {
             'Content-type': 'text/html',
-        })
+        });
 
-        res.end('<h1>Page not found!</h1>')
+        res.end('<h1>Page not found!</h1>');
     }
-})
+});
 
-server.listen(8000, 'https://mezin24.github.io/Node-Farm/')
-// server.listen(8000, '127.0.0.1')
-
-// console.log(replaceTemplate(tempCard, dataObj[1]))
+server.listen(8000, '127.0.0.1');
